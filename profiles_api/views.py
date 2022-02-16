@@ -1,10 +1,13 @@
 from email import message
+from multiprocessing import AuthenticationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.authentication import TokenAuthentication
+from rest_framework import filters
 
-from profiles_api import serializers
+from profiles_api import serializers, models, permissions
 
 class HelloApiView(APIView):
     """Test API View"""
@@ -47,11 +50,11 @@ class HelloApiView(APIView):
         """Delete an object"""
         return Response({'method': 'DELETE'})
     
+    
 class HelloViewSet(viewsets.ViewSet):
     """Test API ViewSet"""
     
     serializer_class = serializers.HelloSerializer
-    
     
     def list(self, request):
         """Return Hello message"""
@@ -92,4 +95,12 @@ class HelloViewSet(viewsets.ViewSet):
         """Handle removing an object by its ID"""
         return Response({'http_method': 'DELETE'})
     
+class UserProfileViewSet(viewsets.ModelViewSet):
+    """Handle creating and updating profiles"""
+    serializer_class = serializers.UserProfileSerilizer
+    queryset = models.UserProfile.objects.all()
     
+    authentication_classes = (TokenAuthentication,)
+    permissions_classes = (permissions.UpdateOwnProfile,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name', 'email',)
